@@ -51,7 +51,7 @@ When using local proxies like **9Router** as an OpenAI-compatible provider:
 └────────────┬────────────┘
              │ Triggers fs.watch (Debounce 1.5s)
              ▼
-┌─────────────────────────┐      GET /v1/models      ┌─────────────────────────┐
+┌─────────────────────────┐      GET /v1/models     ┌─────────────────────────┐
 │   9router-sync Daemon   │ ◄───────────────────────┤   9Router Local Server  │
 │   (Headless Background) │                         │  http://127.0.0.1:20128 │
 └────────────┬────────────┘                         └─────────────────────────┘
@@ -71,13 +71,13 @@ When using local proxies like **9Router** as an OpenAI-compatible provider:
 ## 🚀 Quick Start & Installation
 
 ### Prerequisites
-- **Operating System**: Windows 10 / 11 (x64) (Tested & Recommended).
+- **Operating System**: Windows 10 / 11 (x64) (Tested & Officially Supported).
 - [Node.js](https://nodejs.org/) v18.0.0 or higher.
 - [9Router](https://github.com/anomalyco/9router) running locally (default: `http://127.0.0.1:20128/v1`).
 
 ---
 
-### Windows (Automated Setup)
+### Windows Setup (Recommended & Automated)
 
 1. Clone or download this repository:
    ```bash
@@ -98,23 +98,17 @@ When using local proxies like **9Router** as an OpenAI-compatible provider:
 
 ---
 
-### Linux / macOS / Manual Setup
+### 🐧 / 🍎 Linux & macOS (Untested / Community PRs Welcome)
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
+> [!NOTE]
+> `9router-sync` was developed and verified on Windows x64. While the core Node.js script is theoretically cross-platform, daemon autostart (systemd/launchd) and default 9Router SQLite paths on Linux and macOS **have not been tested**. If you are on Linux or macOS, community pull requests and testing feedback are warmly welcome!
 
-2. Perform a one-time synchronization:
-   ```bash
-   node bin/9router-sync.js --once
-   ```
-
-3. Start the background watcher daemon:
-   ```bash
-   node bin/9router-sync.js --watch
-   ```
-   *(You can manage this process using [PM2](https://pm2.keymetrics.io/) or a user-level `systemd` service).*
+Manual execution (experimental):
+```bash
+npm install
+node bin/9router-sync.js --once   # One-time sync
+node bin/9router-sync.js --watch  # Watcher mode
+```
 
 ---
 
