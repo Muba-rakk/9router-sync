@@ -4,7 +4,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)]()
+[![Platform](https://img.shields.io/badge/Platform-Windows%20(x64)%20Optimized-0078D6.svg?logo=windows)]()
+
+> [!IMPORTANT]
+> **Platform Support & Architecture Notice**  
+> This project is designed, benchmarked, and **primarily optimized for Windows (x64)** (Windows 10 & 11). The automated silent background launcher (`scripts/install-windows.ps1` via VBS/WScript) is specifically built for Windows. While the underlying Node.js CLI engine contains cross-platform path helpers, automated autostart and headless daemonization out of the box are tailored for Windows x64 environments.
 
 ---
 
@@ -67,6 +71,7 @@ When using local proxies like **9Router** as an OpenAI-compatible provider:
 ## 🚀 Quick Start & Installation
 
 ### Prerequisites
+- **Operating System**: Windows 10 / 11 (x64) (Tested & Recommended).
 - [Node.js](https://nodejs.org/) v18.0.0 or higher.
 - [9Router](https://github.com/anomalyco/9router) running locally (default: `http://127.0.0.1:20128/v1`).
 
