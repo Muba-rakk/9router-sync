@@ -1,0 +1,31 @@
+{
+  "name": "9router-sync",
+  "version": "1.0.0",
+  "description": "Event-driven automatic model catalog synchronizer from 9Router to Hermes Agent and OpenCode.",
+  "main": "src/index.js",
+  "bin": {
+    "9router-sync": "bin/9router-sync.js"
+  },
+  "scripts": {
+    "start": "node bin/9router-sync.js --watch",
+    "sync": "node bin/9router-sync.js --once",
+    "test": "node test/test.js"
+  },
+  "keywords": [
+    "9router",
+    "hermes-agent",
+    "opencode",
+    "ai",
+    "llm",
+    "model-sync",
+    "model-discovery"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "yaml": "^2.7.0"
+  }
+}
