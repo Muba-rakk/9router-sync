@@ -13,6 +13,13 @@ function get9RouterDbDir() {
   return path.join(os.homedir(), ".config", "9router", "db");
 }
 
+function get9RouterRootDir() {
+  if (process.env.NINEROUTER_DIR) {
+    return path.resolve(process.env.NINEROUTER_DIR);
+  }
+  return path.dirname(get9RouterDbDir());
+}
+
 function get9RouterBaseUrl(cliPort = null) {
   if (process.env.NINEROUTER_URL) {
     return process.env.NINEROUTER_URL.replace(/\/+$/, "");
@@ -51,6 +58,7 @@ function getHermesProfilesRoot() {
 
 module.exports = {
   get9RouterDbDir,
+  get9RouterRootDir,
   get9RouterBaseUrl,
   getOpenCodeConfigPath,
   getOpenCodePluginsDir,

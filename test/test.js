@@ -14,7 +14,7 @@ console.log("[Test Suite] Running 9Router-Sync tests...");
   const missingPath = path.join(os.tmpdir(), "non-existent-opencode-" + Date.now() + ".json");
   const res = updateOpenCode(missingPath, [{ id: "test-model" }]);
   assert.strictEqual(res.skipped, true, "Should gracefully skip missing OpenCode config");
-  console.log("✔ Test 1 Passed: Graceful OpenCode skip on missing file");
+  console.log("[PASS] Test 1: Graceful OpenCode skip on missing file");
 }
 
 // Test 2: OpenCode JSON update with vision & token limits
@@ -53,7 +53,7 @@ console.log("[Test Suite] Running 9Router-Sync tests...");
   assert.deepStrictEqual(m2.modalities.input, ["text"]);
 
   fs.rmSync(tmpDir, { recursive: true, force: true });
-  console.log("✔ Test 2 Passed: OpenCode JSON update & modalities validation");
+  console.log("[PASS] Test 2: OpenCode JSON update and modalities validation");
 }
 
 // Test 3: Hermes YAML comment & structure preservation
@@ -86,14 +86,42 @@ providers:
   assert.ok(content.includes("context_length: 200000"), "Context length must be formatted");
 
   fs.rmSync(tmpDir, { recursive: true, force: true });
-  console.log("✔ Test 3 Passed: Hermes YAML comment preservation");
+  console.log("[PASS] Test 3: Hermes YAML comment preservation");
 }
 
 // Test 4: Paths helper fallback
 {
   const base = paths.get9RouterBaseUrl("20128");
   assert.strictEqual(base, "http://127.0.0.1:20128/v1");
-  console.log("✔ Test 4 Passed: Paths helper fallback validation");
+
+  const rootDir = paths.get9RouterRootDir();
+  assert.ok(rootDir, "Root dir must resolve");
+  assert.strictEqual(rootDir, path.dirname(paths.get9RouterDbDir()));
+  console.log("[PASS] Test 4: Paths helper fallback validation");
 }
 
-console.log("\nAll 4 tests passed successfully! 🎉\n");
+// Test 5: Watcher event filter logic
+{
+  const { isDatabaseEvent, isCatalogEvent } = require("../src/watcher");
+
+  // Database event checks (handling null, WAL, SHM, casing)
+  assert.strictEqual(isDatabaseEvent(null), true, "null filename in dbDir must trigger");
+  assert.strictEqual(isDatabaseEvent(undefined), true, "undefined filename in dbDir must trigger");
+  assert.strictEqual(isDatabaseEvent("data.sqlite"), true, "data.sqlite must trigger");
+  assert.strictEqual(isDatabaseEvent("data.sqlite-wal"), true, "data.sqlite-wal must trigger");
+  assert.strictEqual(isDatabaseEvent("data.sqlite-shm"), true, "data.sqlite-shm must trigger");
+  assert.strictEqual(isDatabaseEvent("DATA.SQLITE-WAL"), true, "case variant must trigger");
+  assert.strictEqual(isDatabaseEvent("custom.sqlite"), true, "custom .sqlite file must trigger");
+  assert.strictEqual(isDatabaseEvent("random.txt"), false, "non-db file must be ignored");
+
+  // Catalog event checks
+  assert.strictEqual(isCatalogEvent("model-catalog.json"), true, "model-catalog.json must trigger");
+  assert.strictEqual(isCatalogEvent("model-catalog-raw.json"), true, "model-catalog-raw.json must trigger");
+  assert.strictEqual(isCatalogEvent("MODEL-CATALOG.JSON"), true, "cased model-catalog must trigger");
+  assert.strictEqual(isCatalogEvent("other.json"), false, "other json file must be ignored");
+  assert.strictEqual(isCatalogEvent(null), false, "null catalog event must be ignored");
+
+  console.log("[PASS] Test 5: Watcher event filter and null-safety validation");
+}
+
+console.log("\nAll 5 tests passed successfully.\n");
