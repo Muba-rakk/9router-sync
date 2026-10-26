@@ -40,6 +40,9 @@ if (Test-Path $OpenCodeConfig -or (Test-Path (Split-Path $OpenCodeConfig))) {
 
 # 3. Create Silent VBS Autostart Launcher
 Write-Host "[3/4] Creating Windows Startup autostart launcher..." -ForegroundColor Yellow
+$NodePath = (Get-Command node.exe -ErrorAction SilentlyContinue).Source
+if (-not $NodePath) { $NodePath = "node.exe" }
+
 $VbsContent = @"
 ' 9Router-Sync Silent Autostart Runner
 Option Explicit
@@ -48,11 +51,11 @@ Set fso = CreateObject("Scripting.FileSystemObject")
 Set sh = CreateObject("WScript.Shell")
 
 scriptPath = "$WatcherScript"
-nodeExe = "node.exe"
+nodeExe = "$NodePath"
 
 If fso.FileExists(scriptPath) Then
     ' Run completely hidden (WindowStyle = 0), non-blocking
-    sh.Run "cmd.exe /c " & Chr(34) & nodeExe & " " & Chr(34) & scriptPath & Chr(34) & " --watch" & Chr(34), 0, False
+    sh.Run Chr(34) & nodeExe & Chr(34) & " " & Chr(34) & scriptPath & Chr(34) & " --watch", 0, False
 End If
 "@
 
