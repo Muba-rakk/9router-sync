@@ -25,7 +25,7 @@ When using local proxies like **9Router** as an OpenAI-compatible provider:
 
 ## ✨ Features
 
-- **⚡ 100% Event-Driven**: Zero polling loops. Only runs when 9Router's database writes a change (`data.sqlite` / `-wal`) or when a new Hermes profile is created.
+- **⚡ 100% Event-Driven**: Zero polling loops. Watches 9Router SQLite transactions (`data.sqlite`, `-wal`, `-shm`) and Hermes profile directories with intelligent 1.5s debouncing and mid-sync queueing to eliminate dropped events.
 - **🛡️ Auto-Detection & Graceful Fallback**:
   - Uses Hermes only? OpenCode is safely skipped without errors.
   - Uses OpenCode only? Hermes is safely skipped without errors.
@@ -81,7 +81,7 @@ When using local proxies like **9Router** as an OpenAI-compatible provider:
 
 1. Clone or download this repository:
    ```bash
-   git clone https://github.com/your-username/9router-sync.git
+   git clone https://github.com/Rinsiomay/9router-sync.git
    cd 9router-sync
    ```
 
@@ -136,6 +136,7 @@ Options:
 | `NINEROUTER_URL` | Full base URL for 9Router endpoint | `http://127.0.0.1:20128/v1` |
 | `NINEROUTER_PORT` | Custom port for 9Router | `20128` |
 | `NINEROUTER_DB_DIR` | Custom path to 9Router SQLite database folder | Auto-detected per OS |
+| `NINEROUTER_DIR` | Custom path to 9Router root data folder | Parent of `NINEROUTER_DB_DIR` |
 | `OPENCODE_CONFIG` | Custom path to `opencode.json` | `~/.config/opencode/opencode.json` |
 | `HERMES_HOME` | Custom Hermes home directory | Auto-detected per OS |
 
@@ -151,7 +152,8 @@ The test suite validates:
 - Graceful skipping when client configuration files are absent.
 - Accurate mapping of vision modalities and token limits for OpenCode.
 - Accurate preservation of comments, spacing, and keys in Hermes `config.yaml`.
-- Path resolution and fallback mechanics.
+- Path resolution and fallback mechanics across OS environments.
+- Watcher event filtering, SQLite WAL/SHM file handling, and null-safe coalesced filesystem event handling.
 
 ---
 
@@ -162,7 +164,7 @@ Run the uninstaller script:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\uninstall-windows.ps1
 ```
-This stops the running watcher process and removes the Windows Startup launcher.
+This stops the active watcher daemon, removes the Windows Startup launcher (`9Router_ModelSync.vbs`), deletes the OpenCode JIT plugin, and clears lock files.
 
 ---
 

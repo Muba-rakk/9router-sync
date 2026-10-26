@@ -6,10 +6,13 @@ Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host " 9Router-Sync: Windows Uninstaller        " -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 
-$StartupDir = [System.IO.Path]::Combine($env:APPDATA, "Microsoft\Windows\Start Menu\Programs\Startup")
+$AppData = if ($env:APPDATA) { $env:APPDATA } else { [System.Environment]::GetFolderPath('ApplicationData') }
+$StartupDir = [System.IO.Path]::Combine($AppData, "Microsoft\Windows\Start Menu\Programs\Startup")
 $VbsPath = Join-Path $StartupDir "9Router_ModelSync.vbs"
-$LockFile = Join-Path $env:USERPROFILE ".9router-sync\watcher.lock"
-$OpenCodePlugin = Join-Path $env:USERPROFILE ".config\opencode\plugins\9router-sync.js"
+$UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } else { [System.Environment]::GetFolderPath('UserProfile') }
+$LockDir = Join-Path $UserHome ".9router-sync"
+$LockFile = Join-Path $LockDir "watcher.lock"
+$OpenCodePlugin = Join-Path $UserHome ".config\opencode\plugins\9router-sync.js"
 
 # 1. Remove Startup VBS
 if (Test-Path $VbsPath) {
@@ -20,15 +23,36 @@ if (Test-Path $VbsPath) {
 }
 
 # 2. Stop running process
+$stoppedAny = $false
 if (Test-Path $LockFile) {
     $pidToKill = (Get-Content $LockFile).Trim()
-    if ($pidToKill) {
-        Stop-Process -Id $pidToKill -Force -ErrorAction SilentlyContinue
-        Write-Host "[2/3] Stopped running watcher process (PID $pidToKill)." -ForegroundColor Green
+    if ($pidToKill -match '^\d+$') {
+        $proc = Get-Process -Id $pidToKill -ErrorAction SilentlyContinue
+        if ($proc) {
+            Stop-Process -Id $pidToKill -Force -ErrorAction SilentlyContinue
+            Write-Host "[2/3] Stopped running watcher process (PID $pidToKill)." -ForegroundColor Green
+            $stoppedAny = $true
+        }
     }
     Remove-Item -Path $LockFile -Force
-} else {
-    Write-Host "[2/3] No active watcher lockfile found." -ForegroundColor Gray
+}
+
+# Sweep any remaining 9router-sync node processes
+Get-CimInstance Win32_Process -Filter "CommandLine LIKE '%9router-sync.js%'" -ErrorAction SilentlyContinue | Where-Object { $_.ProcessId -ne $PID } | ForEach-Object {
+    Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+    Write-Host "      Terminated background watcher (PID $($_.ProcessId))." -ForegroundColor Green
+    $stoppedAny = $true
+}
+
+if (-not $stoppedAny) {
+    Write-Host "[2/3] No active watcher process found." -ForegroundColor Gray
+}
+
+if (Test-Path $LockDir) {
+    $remainingItems = Get-ChildItem -Path $LockDir -Force -ErrorAction SilentlyContinue
+    if (-not $remainingItems) {
+        Remove-Item -Path $LockDir -Force -Recurse -ErrorAction SilentlyContinue
+    }
 }
 
 # 3. Optional: Remove OpenCode Plugin

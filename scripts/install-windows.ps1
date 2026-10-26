@@ -8,9 +8,11 @@ Write-Host " 9Router-Sync: Windows Setup & Autostart " -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 
 $RepoDir = Split-Path -Parent $PSScriptRoot
-$StartupDir = [System.IO.Path]::Combine($env:APPDATA, "Microsoft\Windows\Start Menu\Programs\Startup")
+$AppData = if ($env:APPDATA) { $env:APPDATA } else { [System.Environment]::GetFolderPath('ApplicationData') }
+$StartupDir = [System.IO.Path]::Combine($AppData, "Microsoft\Windows\Start Menu\Programs\Startup")
 $VbsPath = Join-Path $StartupDir "9Router_ModelSync.vbs"
 $WatcherScript = Join-Path $RepoDir "bin\9router-sync.js"
+$UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } else { [System.Environment]::GetFolderPath('UserProfile') }
 
 # 1. Install npm dependencies
 Write-Host "`n[1/4] Checking and installing npm dependencies..." -ForegroundColor Yellow
@@ -23,9 +25,9 @@ try {
 Pop-Location
 
 # 2. Setup OpenCode Plugin if OpenCode is detected
-$OpenCodeConfig = Join-Path $env:USERPROFILE ".config\opencode\opencode.json"
-$OpenCodePluginsDir = Join-Path $env:USERPROFILE ".config\opencode\plugins"
-if (Test-Path $OpenCodeConfig -or (Test-Path (Split-Path $OpenCodeConfig))) {
+$OpenCodeConfig = Join-Path $UserHome ".config\opencode\opencode.json"
+$OpenCodePluginsDir = Join-Path $UserHome ".config\opencode\plugins"
+if ((Test-Path $OpenCodeConfig) -or (Test-Path (Split-Path $OpenCodeConfig))) {
     Write-Host "[2/4] OpenCode detected. Setting up JIT plugin..." -ForegroundColor Yellow
     if (-not (Test-Path $OpenCodePluginsDir)) {
         New-Item -ItemType Directory -Path $OpenCodePluginsDir -Force | Out-Null
@@ -64,6 +66,16 @@ Write-Host "      Created autostart script: $VbsPath" -ForegroundColor Green
 
 # 4. Trigger initial sync and launch watcher
 Write-Host "[4/4] Starting 9Router-Sync watcher daemon..." -ForegroundColor Yellow
+
+$LockFile = Join-Path $UserHome ".9router-sync\watcher.lock"
+if (Test-Path $LockFile) {
+    $existingPid = (Get-Content $LockFile -ErrorAction SilentlyContinue).Trim()
+    if ($existingPid -match '^\d+$') {
+        Stop-Process -Id $existingPid -Force -ErrorAction SilentlyContinue
+    }
+    Remove-Item -Path $LockFile -Force -ErrorAction SilentlyContinue
+}
+
 Start-Process "wscript.exe" -ArgumentList "`"$VbsPath`""
 
 Write-Host "`nSetup complete! 9Router-Sync is now running silently in the background." -ForegroundColor Green
